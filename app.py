@@ -33,7 +33,6 @@ cloudinary.config(
 # 從環境變數中讀取 LINE 的 Channel Access Token 和 Channel Secret
 line_token = os.getenv('LINE_TOKEN')
 line_secret = os.getenv('LINE_SECRET')
-line_bot_api = LineBotApi(channel_access_token=line_token)
 
 # 檢查是否設置了環境變數
 if not line_token or not line_secret:
@@ -49,6 +48,7 @@ handler = WebhookHandler(line_secret)
 app = Flask(__name__)
 
 app.logger.setLevel(logging.DEBUG)
+quoteToken = None
 
 # 設置一個路由來處理 LINE Webhook 的回調請求
 @app.route("/", methods=['POST'])
@@ -58,6 +58,7 @@ def callback():
 
     # 取得請求的原始內容
     body = request.get_data(as_text=True)
+    quoteToken = body['events'][0]['message']['quoteToken']
     app.logger.info(f"Request body: {body}")
 
     # 驗證簽名並處理請求
@@ -114,13 +115,14 @@ def handle_message(event: Event):
                         id=event.message.id,
                         original_content_url=image_url, 
                         preview_image_url=image_url,
-                        contentProvider={"type": "image", "id": "content_provider_id"}
+                        contentProvider={"type": "line", "id": "content_provider_id"}
                         )
                 else:
                     # 上傳失敗處理
                     image_message = (TextMessageContent(
                         id=event.message.id,
                         text="圖片上傳失敗，請稍後再試。",
+                        quoteToken=quoteToken
                         ))
 
                 # 刪除本地圖片文件
@@ -131,6 +133,7 @@ def handle_message(event: Event):
                 TextMessageContent(
                     id=event.message.id,
                     text=reply_text,
+                    quoteToken=quoteToken
                     ),
                 image_message
             )   
@@ -140,6 +143,7 @@ def handle_message(event: Event):
                 TextMessageContent(
                     id=event.message.id,
                     text=reply_text,
+                    quoteToken=quoteToken
                     )
             )   
 # 應用程序入口點
