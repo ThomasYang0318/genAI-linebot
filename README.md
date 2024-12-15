@@ -7,5 +7,5 @@
         2. LINE_TOKEN=your_line_channel_access_token
         3. LINE_SECRET=your_line_channel_secret
     2. 設定 
-        1. Start Command：python app.py
+        1. Start Command：python3 app.py
         2. Build Command：pip install -r requirements.txt
